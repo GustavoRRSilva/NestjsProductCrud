@@ -45,7 +45,7 @@ export class ProductService {
     if (this.products.push(newUser)) {
       return {
         statusCode: 200,
-        message: 'Usuario criado com sucesso',
+        message: 'Produto criado com sucesso',
         data: newUser,
       };
     }
