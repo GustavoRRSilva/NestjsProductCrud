@@ -12,6 +12,7 @@ import { Product } from './entity/Product.entity';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/CreateProduct.dto';
 import { UpdateProductDto } from './dto/UpdateProduct.dto';
+import { ApiNotFoundResponse } from '@nestjs/swagger';
 
 @Controller('product')
 export class ProductController {
@@ -22,20 +23,21 @@ export class ProductController {
   }
 
   @Post()
-  createProduct(@Body() body: CreateProductDto): Product {
+  createProduct(@Body() body: CreateProductDto): Product | object {
     return this.productsService.createProduct(body);
   }
 
   @Delete('/:id')
-  deleteProduct(@Param('id') id: string): Product[] {
+  deleteProduct(@Param('id') id: string): object {
     return this.productsService.deleteProduct(id);
   }
 
+  @ApiNotFoundResponse()
   @Patch('/:id')
   updateProduct(
     @Param('id') id: string,
     @Body() updateProduct: UpdateProductDto,
-  ): string {
+  ): string | object {
     return this.productsService.updateProduct(id, updateProduct);
   }
 }
