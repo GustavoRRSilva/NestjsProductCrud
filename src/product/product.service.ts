@@ -14,35 +14,40 @@ import { Product } from './entity/Product.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateProductDto } from './dto/CreateProduct.dto';
 import { UpdateProductDto } from './dto/UpdateProduct.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 // eslint-disable-next-line prettier/prettier
 
 @Injectable()
 export class ProductService {
-  private products: Product[] = [
-    {
-      id: uuidv4(),
-      created_at: new Date(),
-      name: 'Sabão',
-      price: 22.5,
-      updated_at: new Date(),
-    },
-  ];
+  constructor(
+    @InjectRepository(Product) private products: Repository<Product>,
+  ) {}
 
-  getAll(): Product[] {
-    return this.products;
+  async getAll(): Promise<Product[]> {
+    return await this.products.find();
   }
-  @Post()
-  createProduct(body: CreateProductDto): object {
-    const newUser: Product = {
-      id: uuidv4(),
+
+  async getById(id: string): Promise<any> {
+    const product = await this.products.findOneBy({ id });
+    if (product != null) {
+      return product;
+    }
+    throw new NotFoundException(
+      'Não foi possivel encontrar produto com esse id',
+    );
+  }
+
+  async createProduct(body: CreateProductDto): Promise<object> {
+    const newUser: Product = this.products.create({
       name: body.name,
       price: body.price,
       created_at: new Date(),
       updated_at: new Date(),
-    };
-
-    if (this.products.push(newUser)) {
+    });
+    const save = await this.products.save(newUser);
+    if (save) {
       return {
         statusCode: 200,
         message: 'Produto criado com sucesso',
@@ -53,42 +58,38 @@ export class ProductService {
     return new BadRequestException('Dados insuficientes');
   }
 
-  @Delete()
-  deleteProduct(id: string): object {
-    const productToBeDeleted = this.products.find(
-      (product) => product.id == id,
-    );
+  async deleteProduct(id: string): Promise<any> {
+    const productToBeDeleted = await this.products.findOneBy({ id });
     console.log(productToBeDeleted);
-    if (productToBeDeleted) {
-      this.products = this.products.filter(
-        (product) => product.id !== productToBeDeleted.id,
-      );
+    if (productToBeDeleted != null) {
+      await this.products.delete(productToBeDeleted);
       return {
         statusCode: 200,
-        message: 'deletado',
+        message: 'Deletado com sucesso ',
       };
     }
-    throw new NotFoundException();
+    throw new BadRequestException();
   }
 
-  @Patch()
-  updateProduct(id: string, updateProduct: UpdateProductDto) {
-    let product: Product | undefined = this.products.find(
-      (product) => product.id === id,
-    );
-    console.log(updateProduct);
+  async updateProduct(
+    id: string,
+    updateProduct: UpdateProductDto,
+  ): Promise<any> {
+    const product = await this.products.findOneBy({
+      id,
+    });
 
-    if (product) {
-      updateProduct.name ? (product.name = updateProduct.name) : product.name;
-      updateProduct.price
-        ? (product.price = updateProduct.price)
-        : product.price;
-
-      product.updated_at = new Date();
+    if (product != undefined) {
+      if (product.name && updateProduct.name) {
+        product.name = updateProduct.name;
+      }
+      if (product.price && updateProduct.price) {
+        product.price = updateProduct.price;
+      }
+      this.products.save(product);
       return {
         statusCode: 200,
-        message: 'Produto alterado',
-        data: product,
+        message: 'Valore(s) alterado(s) com sucesso',
       };
     }
 

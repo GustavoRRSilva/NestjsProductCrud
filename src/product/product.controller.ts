@@ -18,8 +18,13 @@ import { ApiNotFoundResponse } from '@nestjs/swagger';
 export class ProductController {
   constructor(private productsService: ProductService) {}
   @Get()
-  getAll(): Product[] {
+  getAll(): Promise<Product[]> {
     return this.productsService.getAll();
+  }
+
+  @Get('/:id')
+  getById(@Param('id') id: string): Promise<Product[]> {
+    return this.productsService.getById(id);
   }
 
   @Post()
@@ -28,7 +33,7 @@ export class ProductController {
   }
 
   @Delete('/:id')
-  deleteProduct(@Param('id') id: string): object {
+  deleteProduct(@Param('id') id: string): Promise<Product> | null {
     return this.productsService.deleteProduct(id);
   }
 
