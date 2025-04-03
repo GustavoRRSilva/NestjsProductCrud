@@ -41,36 +41,36 @@ export class ProductService {
     }
   }
 
-  async createProduct(body: CreateProductDto): Promise<object> {
-    const newUser: Product = this.products.create({
-      name: body.name,
-      price: body.price,
-      created_at: new Date(),
-      updated_at: new Date(),
-    });
-    const save = await this.products.save(newUser);
-    if (save) {
+  async createProduct(body: CreateProductDto): Promise<any> {
+    try {
+      const newUser: Product = this.products.create({
+        name: body.name,
+        price: body.price,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+      await this.products.save(newUser);
       return {
         statusCode: 200,
         message: 'Produto criado com sucesso',
         data: newUser,
       };
+    } catch (err) {
+      throw err;
     }
-
-    return new BadRequestException('Dados insuficientes');
   }
 
   async deleteProduct(id: string): Promise<any> {
-    const productToBeDeleted = await this.products.findOneBy({ id });
-    console.log(productToBeDeleted);
-    if (productToBeDeleted != null) {
+    try {
+      const productToBeDeleted = await this.products.findOneByOrFail({ id });
       await this.products.delete(productToBeDeleted);
       return {
         statusCode: 200,
         message: 'Deletado com sucesso ',
       };
+    } catch (err) {
+      throw err;
     }
-    throw new BadRequestException();
   }
 
   async updateProduct(
