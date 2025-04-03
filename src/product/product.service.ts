@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { CreateProductDto } from './dto/CreateProduct.dto';
 import { UpdateProductDto } from './dto/UpdateProduct.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityNotFoundError, Repository } from 'typeorm';
 
 // eslint-disable-next-line prettier/prettier
 
@@ -30,13 +30,15 @@ export class ProductService {
   }
 
   async getById(id: string): Promise<any> {
-    const product = await this.products.findOneBy({ id });
-    if (product != null) {
+    try {
+      const product = await this.products.findOneByOrFail({ id });
       return product;
+    } catch (err) {
+      if (err instanceof EntityNotFoundError) {
+        throw new NotFoundException('Produto com esse id não encontrado');
+      }
+      throw err;
     }
-    throw new NotFoundException(
-      'Não foi possivel encontrar produto com esse id',
-    );
   }
 
   async createProduct(body: CreateProductDto): Promise<object> {
